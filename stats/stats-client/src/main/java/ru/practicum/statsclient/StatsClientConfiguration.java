@@ -14,6 +14,6 @@ public class StatsClientConfiguration {
 
     @Bean
     public StatsClient statsClient() {
-        return new StatsClient("http://localhost:9090", restTemplate());
+        return new StatsClient("http://stats-server:9090", restTemplate());
     }
 }

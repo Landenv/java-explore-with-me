@@ -66,24 +66,16 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>ru.practicum.statsserver.StatsServerApplication</mainClass>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>default-jar</id>
-                        <phase>package</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>repackage</goal>
                         </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <addClasspath>true</addClasspath>
-                                    <mainClass>ru.practicum.statsserver.StatsServerApplication</mainClass>
-                                </manifest>
-                            </archive>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
