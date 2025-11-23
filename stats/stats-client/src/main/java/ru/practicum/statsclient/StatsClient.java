@@ -3,15 +3,14 @@ package ru.practicum.statsclient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.statsdto.EndpointHitDto;
 import ru.practicum.statsdto.ViewStats;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class StatsClient {
@@ -43,25 +42,25 @@ public class StatsClient {
     }
 
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        String url = serverUrl + "/stats?start={start}&end={end}&unique={unique}";
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("start", start.format(formatter));
-        parameters.put("end", end.format(formatter));
-        parameters.put("unique", unique != null ? unique : false);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serverUrl + "/stats")
+                .queryParam("start", start.format(formatter))
+                .queryParam("end", end.format(formatter))
+                .queryParam("unique", unique != null ? unique : false);
 
         if (uris != null && !uris.isEmpty()) {
-            url += "&uris={uris}";
-            parameters.put("uris", String.join(",", uris));
+            builder.queryParam("uris", uris.toArray());
         }
 
+        String url = builder.toUriString();
+
         try {
-            ResponseEntity<ViewStats[]> response = restTemplate.getForEntity(url, ViewStats[].class, parameters);
+            ResponseEntity<ViewStats[]> response = restTemplate.getForEntity(url, ViewStats[].class);
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 return Arrays.asList(response.getBody());
             }
-        } catch (Exception e) {
-            log.error("Failed to get stats: {}", e.getMessage());
+        } catch (Exception exception) {
+            log.error("Failed to get stats: {}", exception.getMessage());
         }
 
         return List.of();
