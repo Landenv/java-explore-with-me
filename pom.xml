@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -7,11 +8,10 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.3.2</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 
 	<name>Explore With Me</name>
-
 	<groupId>ru.practicum</groupId>
 	<artifactId>explore-with-me</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -20,7 +20,15 @@
 	<properties>
 		<java.version>21</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<checkstyle.version>10.12.5</checkstyle.version>
+		<spotbugs.version>4.8.5.0</spotbugs.version>
+		<jacoco.version>0.8.11</jacoco.version>
 	</properties>
+
+	<modules>
+		<module>stats</module>
+		<module>main-service</module>
+	</modules>
 
 	<build>
 		<pluginManagement>
@@ -28,6 +36,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.2.5</version>
 					<configuration>
 						<systemPropertyVariables>
 							<spring.profiles.active>test</spring.profiles.active>
@@ -37,7 +46,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-checkstyle-plugin</artifactId>
-					<version>3.1.2</version>
+					<version>3.3.1</version>
 					<configuration>
 						<configLocation>checkstyle.xml</configLocation>
 						<failOnViolation>true</failOnViolation>
@@ -56,14 +65,14 @@
 						<dependency>
 							<groupId>com.puppycrawl.tools</groupId>
 							<artifactId>checkstyle</artifactId>
-							<version>10.3</version>
+							<version>${checkstyle.version}</version>
 						</dependency>
 					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>com.github.spotbugs</groupId>
 					<artifactId>spotbugs-maven-plugin</artifactId>
-					<version>4.8.5.0</version>
+					<version>${spotbugs.version}</version>
 					<configuration>
 						<effort>Max</effort>
 						<threshold>High</threshold>
@@ -79,7 +88,7 @@
 				<plugin>
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>0.8.12</version>
+					<version>${jacoco.version}</version>
 					<configuration>
 						<output>file</output>
 					</configuration>
@@ -147,6 +156,7 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+
 	<profiles>
 		<profile>
 			<id>check</id>
@@ -183,5 +193,4 @@
 			</build>
 		</profile>
 	</profiles>
-
 </project>

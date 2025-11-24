@@ -1,14 +1,66 @@
 services:
-  stats-server:
-    ports:
-      - "9090:9090"
-
+  # База данных для статистики
   stats-db:
     image: postgres:16.1
-
-  ewm-service:
+    container_name: stats-db
     ports:
-      - "8080:8080"
+      - "9091:5432"
+    environment:
+      - POSTGRES_DB=stats
+      - POSTGRES_USER=stats
+      - POSTGRES_PASSWORD=1234
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U stats" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Сервер статистики
+  stats-server:
+    build: ./stats/stats-server
+    container_name: stats-server
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      stats-db:
+        condition: service_healthy
+
+  # База данных для основного сервиса
   ewm-db:
     image: postgres:16.1
+    container_name: ewm-db
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=ewm
+      - POSTGRES_USER=ewm
+      - POSTGRES_PASSWORD=1234
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Основной сервис
+  ewm-service:
+    build: ./main-service
+    container_name: ewm-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
+      - SPRING_DATASOURCE_USERNAME=ewm
+      - SPRING_DATASOURCE_PASSWORD=1234
+      - STATS_SERVER_URL=http://stats-server:9090
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      stats-server:
+        condition: service_healthy
