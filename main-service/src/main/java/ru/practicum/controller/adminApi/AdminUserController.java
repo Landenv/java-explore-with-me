@@ -1,20 +1,18 @@
 package ru.practicum.controller.adminApi;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
-import ru.practicum.service.user.UserService;
+import ru.practicum.service.UserService;
 
-import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/admin/users")
+@RequiredArgsConstructor
 public class AdminUserController {
     private final UserService userService;
 
@@ -26,11 +24,9 @@ public class AdminUserController {
 
     @GetMapping
     public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
-                                  @RequestParam(defaultValue = "0") Integer from,
-                                  @RequestParam(defaultValue = "10") Integer size) {
-
-        Pageable pageable = PageRequest.of(from, size);
-        return userService.getUsers(ids, pageable);
+                                  @RequestParam(defaultValue = "0") int from,
+                                  @RequestParam(defaultValue = "10") int size) {
+        return userService.getUsers(ids, from, size);
     }
 
     @DeleteMapping("/{userId}")

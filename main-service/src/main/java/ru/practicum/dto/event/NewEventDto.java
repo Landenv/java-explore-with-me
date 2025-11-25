@@ -1,14 +1,12 @@
 package ru.practicum.dto.event;
 
-import jakarta.validation.constraints.Future;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import ru.practicum.dto.common.Location;
 
-import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Data
@@ -33,13 +31,13 @@ public class NewEventDto {
     private LocalDateTime eventDate;
 
     @NotNull
-    private Location location;
+    private LocationDto location;
 
     @Builder.Default
     private Boolean paid = false;
 
     @Builder.Default
-    @Min(0)
+    @PositiveOrZero
     private Integer participantLimit = 0;
 
     @Builder.Default

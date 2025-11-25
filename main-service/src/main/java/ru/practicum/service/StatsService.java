@@ -1,53 +1,89 @@
 package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import ru.practicum.statsclient.StatsClient;
 import ru.practicum.statsdto.EndpointHitDto;
 import ru.practicum.statsdto.ViewStats;
+import ru.practicum.statsclient.StatsClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StatsService {
     private final StatsClient statsClient;
 
-    private static final String APP_NAME = "ewm-main-service";
-    private static final String EVENT_URI_PREFIX = "/events/";
-    private static final int STATS_YEARS_RANGE = 1;
-    private static final Long DEFAULT_VIEWS_COUNT = 0L;
+    @Value("${app.name:ewm-main-service}")
+    private String appName;
 
     public void saveHit(String uri, String ip) {
-        log.info("Saving hit - uri: {}, ip: {}", uri, ip);
-        EndpointHitDto hitDto = EndpointHitDto.builder()
-                .app(APP_NAME)
+        System.out.println("=== DEBUG saveHit ===");
+        System.out.println("URI: " + uri);
+        System.out.println("IP: " + ip);
+        System.out.println("App: " + appName);
+
+        EndpointHitDto hit = EndpointHitDto.builder()
+                .app(appName)
                 .uri(uri)
                 .ip(ip)
                 .timestamp(LocalDateTime.now())
                 .build();
-        statsClient.saveHit(hitDto);
+
+        System.out.println("Saving hit: " + hit);
+        statsClient.saveHit(hit);
+        System.out.println("Hit saved successfully");
+        System.out.println("=== END DEBUG saveHit ===");
     }
 
-    public Long getEventViews(Long eventId) {
-        LocalDateTime start = LocalDateTime.now().minusYears(STATS_YEARS_RANGE);
-        LocalDateTime end = LocalDateTime.now().plusYears(STATS_YEARS_RANGE);
-        List<String> uris = List.of(EVENT_URI_PREFIX + eventId);
+    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        System.out.println("=== DEBUG getStats ===");
+        System.out.println("Start: " + start);
+        System.out.println("End: " + end);
+        System.out.println("URIs: " + uris);
+        System.out.println("Unique: " + unique);
 
-        List<ViewStats> stats = statsClient.getStats(start, end, uris, true);
+        List<ViewStats> stats = statsClient.getStats(start, end, uris, unique);
+
+        System.out.println("Received stats: " + stats);
+        System.out.println("=== END DEBUG getStats ===");
+        return stats;
+    }
+
+    public Long getViewsForEvent(Long eventId) {
+        System.out.println("=== DEBUG getViewsForEvent ===");
+        System.out.println("Event ID: " + eventId);
+
+        LocalDateTime start = LocalDateTime.now().minusYears(1);
+        LocalDateTime end = LocalDateTime.now();
+        List<String> uris = List.of("/events/" + eventId);
+
+        System.out.println("Start date: " + start);
+        System.out.println("End date: " + end);
+        System.out.println("URIs to search: " + uris);
+
+        List<ViewStats> stats = getStats(start, end, uris, false);
+
+        System.out.println("All stats for event " + eventId + ": " + stats);
+
         if (stats.isEmpty()) {
-            return DEFAULT_VIEWS_COUNT;
+            System.out.println("No stats found for event " + eventId + ", returning 0");
+            System.out.println("=== END DEBUG getViewsForEvent === (return 0)");
+            return 0L;
         }
-        return stats.get(0).getHits();
-    }
 
-    public List<ViewStats> getEventsViews(List<Long> eventIds, LocalDateTime start, LocalDateTime end, Boolean unique) {
-        List<String> uris = eventIds.stream()
-                .map(id -> EVENT_URI_PREFIX + id)
-                .collect(java.util.stream.Collectors.toList());
-        return statsClient.getStats(start, end, uris, unique);
+        ViewStats eventStats = stats.stream()
+                .filter(s -> s.getUri().equals("/events/" + eventId))
+                .findFirst()
+                .orElse(null);
+
+        System.out.println("Found event stats: " + eventStats);
+
+        Long views = eventStats != null ? eventStats.getHits() : 0L;
+        System.out.println("Final views count for event " + eventId + ": " + views);
+        System.out.println("=== END DEBUG getViewsForEvent === (return " + views + ")");
+
+        return views;
     }
 }

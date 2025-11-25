@@ -1,24 +1,24 @@
 package ru.practicum.controller.adminApi;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.category.CategoryDto;
-import ru.practicum.dto.category.NewCategoryDto;
-import ru.practicum.service.category.CategoryService;
-
-import jakarta.validation.Valid;
+import ru.practicum.service.CategoryService;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/admin/categories")
+@RequiredArgsConstructor
+@Validated
 public class AdminCategoryController {
     private final CategoryService categoryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto newCategoryDto) {
-        return categoryService.createCategory(newCategoryDto);
+    public CategoryDto createCategory(@Valid @RequestBody CategoryDto categoryDto) {
+        return categoryService.createCategory(categoryDto);
     }
 
     @DeleteMapping("/{catId}")

@@ -1,18 +1,17 @@
 package ru.practicum.controller.adminApi;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequest;
-import ru.practicum.service.compilation.CompilationService;
-
-import jakarta.validation.Valid;
+import ru.practicum.service.CompilationService;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/admin/compilations")
+@RequiredArgsConstructor
 public class AdminCompilationController {
     private final CompilationService compilationService;
 
@@ -30,7 +29,7 @@ public class AdminCompilationController {
 
     @PatchMapping("/{compId}")
     public CompilationDto updateCompilation(@PathVariable Long compId,
-                                            @Valid @RequestBody UpdateCompilationRequest updateCompilationRequest) {
-        return compilationService.updateCompilation(compId, updateCompilationRequest);
+                                            @Valid @RequestBody UpdateCompilationRequest updateRequest) {
+        return compilationService.updateCompilation(compId, updateRequest);
     }
 }
