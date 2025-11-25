@@ -38,9 +38,13 @@ public interface EventMapper {
     }
 
     @Mapping(target = "location", expression = "java(mapToLocation(event.getLocationLat(), event.getLocationLon()))")
+    @Mapping(target = "confirmedRequests", source = "confirmedRequests")
+    @Mapping(target = "views", source = "views")
     @Mapping(target = "state", source = "event.state")
     EventFullDto toEventFullDto(Event event, Long confirmedRequests, Long views);
 
+    @Mapping(target = "confirmedRequests", source = "confirmedRequests")
+    @Mapping(target = "views", source = "views")
     EventShortDto toEventShortDto(Event event, Long confirmedRequests, Long views);
 
     default Location mapToLocation(Float lat, Float lon) {

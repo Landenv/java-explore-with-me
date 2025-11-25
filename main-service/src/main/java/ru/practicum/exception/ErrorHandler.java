@@ -12,7 +12,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -23,50 +22,42 @@ public class ErrorHandler {
     private static final String CONFLICT_REASON = "Integrity constraint has been violated.";
     private static final String FORBIDDEN_REASON = "For the requested operation the conditions are not met.";
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleBadRequestException(final IllegalArgumentException illegalArgumentException) {
-        log.warn("Bad request: {}", illegalArgumentException.getMessage());
+    public ApiError handleBadRequestException(final Exception e) {
+        log.warn("Bad request: {}", e.getMessage());
         return ApiError.builder()
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason(BAD_REQUEST_REASON)
-                .message(illegalArgumentException.getMessage())
+                .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleValidationException(final MethodArgumentNotValidException methodArgumentNotValidException) {
-        log.warn("Validation error: {}", methodArgumentNotValidException.getMessage());
+    public ApiError handleValidationException(final MethodArgumentNotValidException e) {
+        log.warn("Validation error: {}", e.getMessage());
+        String message = e.getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation failed");
         return ApiError.builder()
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason(BAD_REQUEST_REASON)
-                .message("Validation failed")
+                .message(message)
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleMissingParameterException(final MissingServletRequestParameterException missingServletRequestParameterException) {
-        log.warn("Missing parameter: {}", missingServletRequestParameterException.getMessage());
+    public ApiError handleMissingParameterException(final MissingServletRequestParameterException e) {
+        log.warn("Missing parameter: {}", e.getMessage());
         return ApiError.builder()
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason(BAD_REQUEST_REASON)
-                .message("Required parameter is missing: " + missingServletRequestParameterException.getParameterName())
-                .timestamp(LocalDateTime.now().format(FORMATTER))
-                .build();
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleTypeMismatchException(final MethodArgumentTypeMismatchException methodArgumentTypeMismatchException) {
-        log.warn("Type mismatch: {}", methodArgumentTypeMismatchException.getMessage());
-        return ApiError.builder()
-                .status(HttpStatus.BAD_REQUEST.name())
-                .reason(BAD_REQUEST_REASON)
-                .message("Invalid parameter type")
+                .message("Required parameter is missing: " + e.getParameterName())
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }
@@ -114,6 +105,18 @@ public class ErrorHandler {
         return ApiError.builder()
                 .status(HttpStatus.NOT_FOUND.name())
                 .reason("The required object was not found.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .build();
+    }
+
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleConstraintViolationException(final jakarta.validation.ConstraintViolationException e) {
+        log.warn("Constraint violation: {}", e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST.name())
+                .reason(BAD_REQUEST_REASON)
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();

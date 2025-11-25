@@ -14,6 +14,7 @@ import ru.practicum.model.EventState;
 import ru.practicum.model.User;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.ParticipationRequestRepository;
 import ru.practicum.repository.UserRepository;
 import ru.practicum.service.StatsService;
 
@@ -29,12 +30,11 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ParticipationRequestRepository participationRequestRepository;
     private final StatsService statsService;
     private final EventMapper eventMapper;
 
     private static final int MIN_HOURS_BEFORE_EVENT = 2;
-    private static final Long DEFAULT_CONFIRMED_REQUESTS = 0L;
-    private static final Long DEFAULT_VIEWS = 0L;
 
     @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
@@ -47,21 +47,30 @@ public class EventService {
 
         Event event = eventMapper.toEvent(newEventDto, user, categoryRepository);
         Event savedEvent = eventRepository.save(event);
-        return eventMapper.toEventFullDto(savedEvent, DEFAULT_CONFIRMED_REQUESTS, DEFAULT_VIEWS);
+
+        Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(savedEvent.getId());
+        Long views = statsService.getEventViews(savedEvent.getId());
+
+        return eventMapper.toEventFullDto(savedEvent, confirmedRequests, views);
     }
 
     public List<EventShortDto> getUserEvents(Long userId, Pageable pageable) {
         List<Event> events = eventRepository.findByInitiatorId(userId, pageable);
         return events.stream()
-                .map(event -> eventMapper.toEventShortDto(event, DEFAULT_CONFIRMED_REQUESTS, DEFAULT_VIEWS))
+                .map(event -> {
+                    Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(event.getId());
+                    Long views = statsService.getEventViews(event.getId());
+                    return eventMapper.toEventShortDto(event, confirmedRequests, views);
+                })
                 .collect(Collectors.toList());
     }
 
     public EventFullDto getUserEvent(Long userId, Long eventId) {
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(eventId);
         Long views = statsService.getEventViews(eventId);
-        return eventMapper.toEventFullDto(event, DEFAULT_CONFIRMED_REQUESTS, views);
+        return eventMapper.toEventFullDto(event, confirmedRequests, views);
     }
 
     @Transactional
@@ -73,9 +82,13 @@ public class EventService {
             throw new ForbiddenException("Only pending or canceled events can be changed");
         }
 
-        if (updateRequest.getEventDate() != null &&
-                updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(MIN_HOURS_BEFORE_EVENT))) {
-            throw new ForbiddenException("Event date must be at least " + MIN_HOURS_BEFORE_EVENT + " hours from now");
+        if (updateRequest.getEventDate() != null) {
+            if (updateRequest.getEventDate().isBefore(LocalDateTime.now())) {
+                throw new ForbiddenException("Event date cannot be in the past");
+            }
+            if (updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(MIN_HOURS_BEFORE_EVENT))) {
+                throw new ForbiddenException("Event date must be at least " + MIN_HOURS_BEFORE_EVENT + " hours from now");
+            }
         }
 
         updateEventFields(event, updateRequest);
@@ -92,15 +105,20 @@ public class EventService {
         }
 
         Event updatedEvent = eventRepository.save(event);
+        Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(eventId);
         Long views = statsService.getEventViews(eventId);
-        return eventMapper.toEventFullDto(updatedEvent, DEFAULT_CONFIRMED_REQUESTS, views);
+        return eventMapper.toEventFullDto(updatedEvent, confirmedRequests, views);
     }
 
     public List<EventFullDto> getEventsByAdmin(List<Long> users, List<EventState> states, List<Long> categories,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable pageable) {
         List<Event> events = eventRepository.findEventsByAdmin(users, states, categories, rangeStart, rangeEnd, pageable);
         return events.stream()
-                .map(event -> eventMapper.toEventFullDto(event, DEFAULT_CONFIRMED_REQUESTS, statsService.getEventViews(event.getId())))
+                .map(event -> {
+                    Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(event.getId());
+                    Long views = statsService.getEventViews(event.getId());
+                    return eventMapper.toEventFullDto(event, confirmedRequests, views);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -109,9 +127,14 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        if (updateRequest.getEventDate() != null &&
-                updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new ForbiddenException("Event date must be at least 1 hour from now");
+        // Исправление: правильная проверка даты для администратора
+        if (updateRequest.getEventDate() != null) {
+            if (updateRequest.getEventDate().isBefore(LocalDateTime.now())) {
+                throw new ForbiddenException("Event date cannot be in the past");
+            }
+            if (updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+                throw new ForbiddenException("Event date must be at least 1 hour from now");
+            }
         }
 
         if (updateRequest.getStateAction() != null) {
@@ -131,8 +154,9 @@ public class EventService {
 
         updateEventFields(event, updateRequest);
         Event updatedEvent = eventRepository.save(event);
+        Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(eventId);
         Long views = statsService.getEventViews(eventId);
-        return eventMapper.toEventFullDto(updatedEvent, DEFAULT_CONFIRMED_REQUESTS, views);
+        return eventMapper.toEventFullDto(updatedEvent, confirmedRequests, views);
     }
 
     public List<EventShortDto> getEventsPublic(String text, List<Long> categories, Boolean paid,
@@ -150,7 +174,11 @@ public class EventService {
         List<Event> events = eventRepository.findEventsPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
 
         return events.stream()
-                .map(event -> eventMapper.toEventShortDto(event, DEFAULT_CONFIRMED_REQUESTS, statsService.getEventViews(event.getId())))
+                .map(event -> {
+                    Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(event.getId());
+                    Long views = statsService.getEventViews(event.getId());
+                    return eventMapper.toEventShortDto(event, confirmedRequests, views);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -162,8 +190,9 @@ public class EventService {
             throw new NotFoundException("Event with id=" + eventId + " was not found");
         }
 
+        Long confirmedRequests = participationRequestRepository.countConfirmedRequestsByEventId(eventId);
         Long views = statsService.getEventViews(eventId);
-        return eventMapper.toEventFullDto(event, DEFAULT_CONFIRMED_REQUESTS, views);
+        return eventMapper.toEventFullDto(event, confirmedRequests, views);
     }
 
     private void updateEventFields(Event event, Object updateRequest) {

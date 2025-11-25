@@ -19,6 +19,7 @@ import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,11 +57,18 @@ public class ParticipationRequestService {
             throw new ConflictException("Participant limit reached");
         }
 
+        RequestStatus status;
+        if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
+            status = RequestStatus.CONFIRMED;
+        } else {
+            status = RequestStatus.PENDING;
+        }
+
         ParticipationRequest participationRequest = ParticipationRequest.builder()
                 .created(LocalDateTime.now())
                 .event(event)
                 .requester(user)
-                .status(event.getRequestModeration() ? RequestStatus.PENDING : RequestStatus.CONFIRMED)
+                .status(status)
                 .build();
 
         ParticipationRequest savedParticipationRequest = participationRequestRepository.save(participationRequest);
@@ -110,7 +118,9 @@ public class ParticipationRequestService {
             throw new NotFoundException("Only event initiator can change request status");
         }
 
-        List<ParticipationRequest> requests = participationRequestRepository.findByIds(updateRequest.getRequestIds());
+        // Исправление: преобразуем массив в список
+        List<Long> requestIds = Arrays.asList(updateRequest.getRequestIds());
+        List<ParticipationRequest> requests = participationRequestRepository.findByIds(requestIds);
 
         if (requests.stream().anyMatch(req -> req.getStatus() != RequestStatus.PENDING)) {
             throw new ConflictException("Request must have status PENDING");

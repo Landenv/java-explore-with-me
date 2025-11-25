@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryDto;
+import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.category.CategoryMapper;
 import ru.practicum.model.Category;
 import ru.practicum.repository.CategoryRepository;
@@ -32,7 +34,7 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(Long categoryId) {
         if (eventRepository.existsByCategoryId(categoryId)) {
-            throw new IllegalArgumentException("The category is not empty");
+            throw new ConflictException("The category is not empty");
         }
         categoryRepository.deleteById(categoryId);
     }
@@ -40,11 +42,11 @@ public class CategoryService {
     @Transactional
     public CategoryDto updateCategory(Long categoryId, CategoryDto categoryDto) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category with id=" + categoryId + " was not found"));
+                .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
 
         if (categoryRepository.existsByName(categoryDto.getName()) &&
                 !category.getName().equals(categoryDto.getName())) {
-            throw new IllegalArgumentException("Category name must be unique");
+            throw new ConflictException("Category name must be unique");
         }
 
         category.setName(categoryDto.getName());
@@ -60,7 +62,7 @@ public class CategoryService {
 
     public CategoryDto getCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category with id=" + categoryId + " was not found"));
+                .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
         return categoryMapper.toCategoryDto(category);
     }
 }

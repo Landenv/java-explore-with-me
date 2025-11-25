@@ -24,5 +24,5 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
     List<ParticipationRequest> findByIdIn(List<Long> requestIds);
 
     @Query("SELECT pr FROM ParticipationRequest pr WHERE pr.id IN :requestIds")
-    List<ParticipationRequest> findByIds(@Param("requestIds") Long[] requestIds);
+    List<ParticipationRequest> findByIds(@Param("requestIds") List<Long> requestIds);
 }
