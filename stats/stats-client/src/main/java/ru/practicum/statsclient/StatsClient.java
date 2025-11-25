@@ -42,10 +42,12 @@ public class StatsClient {
     }
 
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        String startFormatted = start.format(formatter).replace(" ", "T");
+        String endFormatted = end.format(formatter).replace(" ", "T");
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serverUrl + "/stats")
-                .queryParam("start", start.format(formatter))
-                .queryParam("end", end.format(formatter))
+                .queryParam("start", startFormatted)
+                .queryParam("end", endFormatted)
                 .queryParam("unique", unique != null ? unique : false);
 
         if (uris != null && !uris.isEmpty()) {
@@ -53,6 +55,7 @@ public class StatsClient {
         }
 
         String url = builder.toUriString();
+        log.debug("Requesting stats with URL: {}", url);
 
         try {
             ResponseEntity<ViewStats[]> response = restTemplate.getForEntity(url, ViewStats[].class);

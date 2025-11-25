@@ -55,15 +55,16 @@ public class StatsService {
         System.out.println("=== DEBUG getViewsForEvent ===");
         System.out.println("Event ID: " + eventId);
 
-        LocalDateTime start = LocalDateTime.now().minusYears(1);
-        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime start = LocalDateTime.now().minusYears(10); // вместо 1 года
+        LocalDateTime end = LocalDateTime.now().plusHours(1);     // добавляем запас
+
         List<String> uris = List.of("/events/" + eventId);
 
         System.out.println("Start date: " + start);
         System.out.println("End date: " + end);
         System.out.println("URIs to search: " + uris);
 
-        List<ViewStats> stats = getStats(start, end, uris, false);
+        List<ViewStats> stats = getStats(start, end, uris, true);
 
         System.out.println("All stats for event " + eventId + ": " + stats);
 
