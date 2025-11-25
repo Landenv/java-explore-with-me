@@ -35,7 +35,7 @@ public class PublicEventController {
 
         statsService.saveHit("ewm-main-service", httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr());
 
-        Pageable pageable = PageRequest.of(from / size, size);
+        Pageable pageable = PageRequest.of(from > 0 ? from / size : 0, size);
         return eventService.getEventsPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
     }
 

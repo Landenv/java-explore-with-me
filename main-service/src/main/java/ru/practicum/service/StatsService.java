@@ -37,7 +37,7 @@ public class StatsService {
         LocalDateTime end = LocalDateTime.now().plusYears(STATS_YEARS_RANGE);
         List<String> uris = List.of(EVENT_URI_PREFIX + eventId);
 
-        List<ViewStats> stats = statsClient.getStats(start, end, uris, false);
+        List<ViewStats> stats = statsClient.getStats(start, end, uris, true); // Исправление: unique = true для уникальных просмотров
         if (stats.isEmpty()) {
             return DEFAULT_VIEWS_COUNT;
         }

@@ -28,7 +28,7 @@ public class AdminEventController {
                                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                         @RequestParam(defaultValue = "0") Integer from,
                                         @RequestParam(defaultValue = "10") Integer size) {
-        Pageable pageable = PageRequest.of(from / size, size);
+        Pageable pageable = PageRequest.of(from > 0 ? from / size : 0, size);
         List<EventState> eventStates = null;
         if (states != null) {
             eventStates = states.stream()

@@ -12,6 +12,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -38,7 +39,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleValidationException(final MethodArgumentNotValidException e) {
         log.warn("Validation error: {}", e.getMessage());
-        String message = e.getFieldErrors().stream()
+        String message = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .findFirst()
                 .orElse("Validation failed");
@@ -114,10 +115,26 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleConstraintViolationException(final jakarta.validation.ConstraintViolationException e) {
         log.warn("Constraint violation: {}", e.getMessage());
+        String message = e.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .findFirst()
+                .orElse("Constraint violation");
         return ApiError.builder()
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason(BAD_REQUEST_REASON)
-                .message(e.getMessage())
+                .message(message)
+                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .build();
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleMissingServletRequestParameterException(final org.springframework.web.bind.MissingServletRequestParameterException e) {
+        log.warn("Missing request parameter: {}", e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST.name())
+                .reason(BAD_REQUEST_REASON)
+                .message("Missing required parameter: " + e.getParameterName())
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }
