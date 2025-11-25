@@ -26,7 +26,7 @@ public class PrivateEventController {
     public List<EventShortDto> getUserEvents(@PathVariable Long userId,
                                              @RequestParam(defaultValue = "0") Integer from,
                                              @RequestParam(defaultValue = "10") Integer size) {
-        int page = from / size;
+        int page = size > 0 ? from / size : 0;
         Pageable pageable = PageRequest.of(page, size);
         return eventService.getUserEvents(userId, pageable);
     }

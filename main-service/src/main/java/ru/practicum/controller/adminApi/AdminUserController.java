@@ -10,7 +10,6 @@ import ru.practicum.dto.user.UserDto;
 import ru.practicum.service.user.UserService;
 
 import jakarta.validation.Valid;
-
 import java.util.List;
 
 @RestController
@@ -29,7 +28,7 @@ public class AdminUserController {
     public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
                                   @RequestParam(defaultValue = "0") Integer from,
                                   @RequestParam(defaultValue = "10") Integer size) {
-        int page = from / size;
+        int page = size > 0 ? from / size : 0;
         Pageable pageable = PageRequest.of(page, size);
         return userService.getUsers(ids, pageable);
     }

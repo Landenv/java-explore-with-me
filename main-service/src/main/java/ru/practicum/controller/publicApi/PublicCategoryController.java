@@ -18,7 +18,8 @@ public class PublicCategoryController {
     @GetMapping
     public List<CategoryDto> getCategories(@RequestParam(defaultValue = "0") Integer from,
                                            @RequestParam(defaultValue = "10") Integer size) {
-        Pageable pageable = PageRequest.of(from / size, size);
+        int page = size > 0 ? from / size : 0;
+        Pageable pageable = PageRequest.of(page, size);
         return categoryService.getCategories(pageable);
     }
 

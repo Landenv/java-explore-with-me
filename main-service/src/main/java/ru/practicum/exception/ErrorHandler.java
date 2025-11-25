@@ -13,6 +13,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -23,7 +24,8 @@ public class ErrorHandler {
     private static final String CONFLICT_REASON = "Integrity constraint has been violated.";
     private static final String FORBIDDEN_REASON = "For the requested operation the conditions are not met.";
 
-    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class})
+    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class, ArithmeticException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleBadRequestException(final Exception e) {
         log.warn("Bad request: {}", e.getMessage());

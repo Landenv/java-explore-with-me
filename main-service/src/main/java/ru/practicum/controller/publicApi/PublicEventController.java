@@ -11,6 +11,7 @@ import ru.practicum.service.event.EventService;
 import ru.practicum.service.StatsService;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class PublicEventController {
                                          @RequestParam(defaultValue = "10") Integer size,
                                          HttpServletRequest httpServletRequest) {
 
-        int page = from / size;
+        int page = size > 0 ? from / size : 0;
         Pageable pageable = PageRequest.of(page, size);
 
         statsService.saveHit("ewm-main-service", httpServletRequest.getRequestURI() + "?" + httpServletRequest.getQueryString(), httpServletRequest.getRemoteAddr());
