@@ -11,7 +11,6 @@ import ru.practicum.service.event.EventService;
 import ru.practicum.service.StatsService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,16 +33,15 @@ public class PublicEventController {
                                          @RequestParam(defaultValue = "10") Integer size,
                                          HttpServletRequest httpServletRequest) {
 
-        Pageable pageable = PageRequest.of(from, size);
+        statsService.saveHit(httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr());
 
-        statsService.saveHit("ewm-main-service", httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr());
-
+        Pageable pageable = PageRequest.of(from / size, size);
         return eventService.getEventsPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
     }
 
     @GetMapping("/{id}")
     public EventFullDto getEvent(@PathVariable Long id, HttpServletRequest httpServletRequest) {
-        statsService.saveHit("ewm-main-service", httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr());
+        statsService.saveHit(httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr());
         return eventService.getEventPublic(id);
     }
 }

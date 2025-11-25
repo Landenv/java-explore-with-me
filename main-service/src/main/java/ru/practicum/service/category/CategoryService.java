@@ -26,8 +26,8 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto createCategory(NewCategoryDto newCategoryDto) {
-        if (newCategoryDto.getName().length() > 50) {
-            throw new IllegalArgumentException("Category name length must be less than 50");
+        if (categoryRepository.existsByName(newCategoryDto.getName())) {
+            throw new ConflictException("Category name must be unique");
         }
 
         Category category = categoryMapper.toCategory(newCategoryDto);
@@ -48,20 +48,13 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto updateCategory(Long categoryId, CategoryDto categoryDto) {
-        if (categoryDto.getName() != null && categoryDto.getName().length() > 50) {
-            throw new IllegalArgumentException("Category name length must be less than 50");
-        }
-
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
 
-        if (categoryDto.getName() != null &&
-                categoryRepository.existsByName(categoryDto.getName()) &&
-                !category.getName().equals(categoryDto.getName())) {
-            throw new ConflictException("Category name must be unique");
-        }
-
-        if (categoryDto.getName() != null) {
+        if (categoryDto.getName() != null && !categoryDto.getName().equals(category.getName())) {
+            if (categoryRepository.existsByName(categoryDto.getName())) {
+                throw new ConflictException("Category name must be unique");
+            }
             category.setName(categoryDto.getName());
         }
 

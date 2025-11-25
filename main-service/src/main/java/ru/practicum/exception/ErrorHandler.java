@@ -90,11 +90,11 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiError handleForbiddenException(final ForbiddenException e) {
         log.warn("Forbidden operation: {}", e.getMessage());
         return ApiError.builder()
-                .status("FORBIDDEN")
+                .status(HttpStatus.FORBIDDEN.name())
                 .reason(FORBIDDEN_REASON)
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(FORMATTER))
