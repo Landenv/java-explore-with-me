@@ -11,8 +11,12 @@ import ru.practicum.model.Event;
 import ru.practicum.model.User;
 import ru.practicum.repository.CategoryRepository;
 
+import java.time.format.DateTimeFormatter;
+
 @Mapper(componentModel = "spring", uses = {ru.practicum.mapper.user.UserMapper.class, ru.practicum.mapper.category.CategoryMapper.class})
 public interface EventMapper {
+
+    DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     default Event toEvent(NewEventDto newEventDto, User user, CategoryRepository categoryRepository) {
         Category category = categoryRepository.findById(newEventDto.getCategory())
@@ -41,10 +45,14 @@ public interface EventMapper {
     @Mapping(target = "confirmedRequests", source = "confirmedRequests")
     @Mapping(target = "views", source = "views")
     @Mapping(target = "state", source = "event.state")
+    @Mapping(target = "eventDate", expression = "java(event.getEventDate().format(DATE_TIME_FORMATTER))")
+    @Mapping(target = "createdOn", expression = "java(event.getCreatedOn().format(DATE_TIME_FORMATTER))")
+    @Mapping(target = "publishedOn", expression = "java(event.getPublishedOn() != null ? event.getPublishedOn().format(DATE_TIME_FORMATTER) : null)")
     EventFullDto toEventFullDto(Event event, Long confirmedRequests, Long views);
 
     @Mapping(target = "confirmedRequests", source = "confirmedRequests")
     @Mapping(target = "views", source = "views")
+    @Mapping(target = "eventDate", expression = "java(event.getEventDate().format(DATE_TIME_FORMATTER))")
     EventShortDto toEventShortDto(Event event, Long confirmedRequests, Long views);
 
     default Location mapToLocation(Float lat, Float lon) {

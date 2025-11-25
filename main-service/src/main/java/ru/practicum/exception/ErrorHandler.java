@@ -12,7 +12,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -123,18 +122,6 @@ public class ErrorHandler {
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason(BAD_REQUEST_REASON)
                 .message(message)
-                .timestamp(LocalDateTime.now().format(FORMATTER))
-                .build();
-    }
-
-    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleMissingServletRequestParameterException(final org.springframework.web.bind.MissingServletRequestParameterException e) {
-        log.warn("Missing request parameter: {}", e.getMessage());
-        return ApiError.builder()
-                .status(HttpStatus.BAD_REQUEST.name())
-                .reason(BAD_REQUEST_REASON)
-                .message("Missing required parameter: " + e.getParameterName())
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }

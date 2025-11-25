@@ -33,6 +33,9 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(Long categoryId) {
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new NotFoundException("Category with id=" + categoryId + " was not found");
+        }
         if (eventRepository.existsByCategoryId(categoryId)) {
             throw new ConflictException("The category is not empty");
         }
