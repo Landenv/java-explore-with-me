@@ -28,8 +28,8 @@ public class AdminUserController {
     public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
                                   @RequestParam(defaultValue = "0") Integer from,
                                   @RequestParam(defaultValue = "10") Integer size) {
-        int page = size > 0 ? from / size : 0;
-        Pageable pageable = PageRequest.of(page, size);
+
+        Pageable pageable = PageRequest.of(from, size);
         return userService.getUsers(ids, pageable);
     }
 

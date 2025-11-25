@@ -118,7 +118,7 @@ public class ErrorHandler {
     public ApiError handleConstraintViolationException(final jakarta.validation.ConstraintViolationException e) {
         log.warn("Constraint violation: {}", e.getMessage());
         String message = e.getConstraintViolations().stream()
-                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .map(violation -> violation.getMessage())
                 .findFirst()
                 .orElse("Constraint violation");
         return ApiError.builder()

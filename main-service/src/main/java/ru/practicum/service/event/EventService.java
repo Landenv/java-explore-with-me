@@ -127,7 +127,6 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        // Исправление: правильная проверка даты для администратора
         if (updateRequest.getEventDate() != null) {
             if (updateRequest.getEventDate().isBefore(LocalDateTime.now())) {
                 throw new ForbiddenException("Event date cannot be in the past");
@@ -171,7 +170,14 @@ public class EventService {
             onlyAvailable = false;
         }
 
-        List<Event> events = eventRepository.findEventsPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
+        List<Event> events = eventRepository.findEventsPublic(text, categories, paid, rangeStart, rangeEnd, pageable);
+
+        if (onlyAvailable) {
+            events = events.stream()
+                    .filter(event -> event.getParticipantLimit() == 0 ||
+                            event.getParticipantLimit() > participationRequestRepository.countConfirmedRequestsByEventId(event.getId()))
+                    .collect(Collectors.toList());
+        }
 
         return events.stream()
                 .map(event -> {

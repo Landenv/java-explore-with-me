@@ -19,8 +19,8 @@ public class PublicCompilationController {
     public List<CompilationDto> getCompilations(@RequestParam(required = false) Boolean pinned,
                                                 @RequestParam(defaultValue = "0") Integer from,
                                                 @RequestParam(defaultValue = "10") Integer size) {
-        int page = size > 0 ? from / size : 0;
-        Pageable pageable = PageRequest.of(page, size);
+
+        Pageable pageable = PageRequest.of(from, size);
         return compilationService.getCompilations(pinned, pageable);
     }
 

@@ -34,10 +34,9 @@ public class PublicEventController {
                                          @RequestParam(defaultValue = "10") Integer size,
                                          HttpServletRequest httpServletRequest) {
 
-        int page = size > 0 ? from / size : 0;
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(from, size);
 
-        statsService.saveHit("ewm-main-service", httpServletRequest.getRequestURI() + "?" + httpServletRequest.getQueryString(), httpServletRequest.getRemoteAddr());
+        statsService.saveHit("ewm-main-service", httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr());
 
         return eventService.getEventsPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
     }

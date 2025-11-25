@@ -13,6 +13,7 @@ import ru.practicum.service.event.EventService;
 import ru.practicum.service.request.ParticipationRequestService;
 
 import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -26,8 +27,8 @@ public class PrivateEventController {
     public List<EventShortDto> getUserEvents(@PathVariable Long userId,
                                              @RequestParam(defaultValue = "0") Integer from,
                                              @RequestParam(defaultValue = "10") Integer size) {
-        int page = size > 0 ? from / size : 0;
-        Pageable pageable = PageRequest.of(page, size);
+
+        Pageable pageable = PageRequest.of(from, size);
         return eventService.getUserEvents(userId, pageable);
     }
 

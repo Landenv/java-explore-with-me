@@ -11,6 +11,7 @@ import ru.practicum.model.EventState;
 import ru.practicum.service.event.EventService;
 
 import jakarta.validation.Valid;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,8 +30,8 @@ public class AdminEventController {
                                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                         @RequestParam(defaultValue = "0") Integer from,
                                         @RequestParam(defaultValue = "10") Integer size) {
-        int page = size > 0 ? from / size : 0;
-        Pageable pageable = PageRequest.of(page, size);
+
+        Pageable pageable = PageRequest.of(from, size);
         List<EventState> eventStates = null;
         if (states != null) {
             eventStates = states.stream()
