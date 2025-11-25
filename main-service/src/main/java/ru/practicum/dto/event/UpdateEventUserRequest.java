@@ -18,15 +18,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateEventUserRequest {
-    @Size(min = 20, max = 2000)
+    @Size(min = 20, max = 2000, message = "Annotation must be between 20 and 2000 characters")
     private String annotation;
 
     private Long category;
 
-    @Size(min = 20, max = 7000)
+    @Size(min = 20, max = 7000, message = "Description must be between 20 and 7000 characters")
     private String description;
 
-    @Future
+    @Future(message = "Event date must be in the future")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
@@ -38,7 +38,7 @@ public class UpdateEventUserRequest {
 
     private Boolean requestModeration;
 
-    @Size(min = 3, max = 120)
+    @Size(min = 3, max = 120, message = "Title must be between 3 and 120 characters")
     private String title;
 
     private String stateAction;
