@@ -16,7 +16,7 @@ import java.util.List;
 public class StatsClient {
     private final String serverUrl;
     private final RestTemplate restTemplate;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     public StatsClient(String serverUrl, RestTemplate restTemplate) {
         this.serverUrl = serverUrl;
@@ -42,8 +42,8 @@ public class StatsClient {
     }
 
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        String startFormatted = start.format(formatter).replace(" ", "T");
-        String endFormatted = end.format(formatter).replace(" ", "T");
+        String startFormatted = start.format(formatter);
+        String endFormatted = end.format(formatter);
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serverUrl + "/stats")
                 .queryParam("start", startFormatted)

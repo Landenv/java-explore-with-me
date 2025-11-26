@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.category.NewCategoryDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CategoryMapper;
@@ -26,12 +27,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto createCategory(CategoryDto categoryDto) {
-        if (categoryRepository.existsByName(categoryDto.getName())) {
+    public CategoryDto createCategory(NewCategoryDto newCategoryDto) {
+        if (categoryRepository.existsByName(newCategoryDto.getName())) {
             throw new ConflictException("Категория с таким названием уже существует");
         }
 
-        Category category = CategoryMapper.toEntity(categoryDto);
+        Category category = CategoryMapper.toEntity(newCategoryDto);
         Category savedCategory = categoryRepository.save(category);
         return CategoryMapper.toDto(savedCategory);
     }
@@ -55,17 +56,10 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категория с id=" + catId + " не найдена"));
 
-        if (categoryDto.getName() != null && categoryDto.getName().equals(category.getName())) {
-            return CategoryMapper.toDto(category);
-        }
-
-        if (categoryDto.getName() != null &&
-                !categoryDto.getName().equals(category.getName()) &&
-                categoryRepository.existsByNameAndIdNot(categoryDto.getName(), catId)) {
-            throw new ConflictException("Категория с таким названием уже существует");
-        }
-
-        if (categoryDto.getName() != null) {
+        if (categoryDto.getName() != null && !categoryDto.getName().equals(category.getName())) {
+            if (categoryRepository.existsByNameAndIdNot(categoryDto.getName(), catId)) {
+                throw new ConflictException("Категория с таким названием уже существует");
+            }
             category.setName(categoryDto.getName());
             Category updatedCategory = categoryRepository.save(category);
             return CategoryMapper.toDto(updatedCategory);

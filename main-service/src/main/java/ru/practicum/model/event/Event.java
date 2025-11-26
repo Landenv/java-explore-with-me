@@ -3,15 +3,17 @@ package ru.practicum.model.event;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.user.User;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -67,7 +69,4 @@ public class Event {
 
     @Column(name = "title", nullable = false, length = 120)
     private String title;
-
-    @Transient
-    private Long views;
 }
