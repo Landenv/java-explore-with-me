@@ -7,6 +7,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.statsdto.EndpointHitDto;
 import ru.practicum.statsdto.ViewStats;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -42,17 +43,23 @@ public class StatsClient {
     }
 
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        String startFormatted = start.format(formatter);
+        String endFormatted = end.format(formatter);
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serverUrl + "/stats")
-                .queryParam("start", start.format(formatter))
-                .queryParam("end", end.format(formatter))
+                .queryParam("start", startFormatted)
+                .queryParam("end", endFormatted)
                 .queryParam("unique", unique != null ? unique : false);
 
         if (uris != null && !uris.isEmpty()) {
-            builder.queryParam("uris", uris.toArray());
+            for (String uri : uris) {
+                builder.queryParam("uris", uri);
+            }
         }
 
-        String url = builder.toUriString();
+        String url = builder.encode(StandardCharsets.UTF_8).build(false).toUriString();
+
+        log.debug("Requesting stats with URL: {}", url);
 
         try {
             ResponseEntity<ViewStats[]> response = restTemplate.getForEntity(url, ViewStats[].class);

@@ -31,7 +31,7 @@ class StatsIntegrationTest {
     private ObjectMapper objectMapper;
 
     private EndpointHitDto validHitDto;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @BeforeEach
     void setUp() {
@@ -105,7 +105,6 @@ class StatsIntegrationTest {
 
     @Test
     void getStats_WithUris_ShouldReturnOk() throws Exception {
-        // First save a hit
         mockMvc.perform(post("/hit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validHitDto)));
@@ -124,7 +123,6 @@ class StatsIntegrationTest {
 
     @Test
     void getStats_WithUnique_ShouldReturnOk() throws Exception {
-        // First save a hit
         mockMvc.perform(post("/hit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validHitDto)));

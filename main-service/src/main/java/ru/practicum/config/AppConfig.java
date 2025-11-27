@@ -1,12 +1,12 @@
-package ru.practicum.statsclient;
+package ru.practicum.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+import ru.practicum.statsclient.StatsClient;
 
 @Configuration
-public class StatsClientConfiguration {
-
+public class AppConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();

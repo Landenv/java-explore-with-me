@@ -12,6 +12,7 @@ import ru.practicum.statsdto.EndpointHitDto;
 import ru.practicum.statsdto.ViewStats;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,7 +30,7 @@ class StatsControllerTest {
 
     private EndpointHitDto hitDto;
     private EndpointHit savedHit;
-    private ViewStats viewStats;
+    private ViewStats viewStats1, viewStats2;
 
     @BeforeEach
     void setUp() {
@@ -48,7 +49,8 @@ class StatsControllerTest {
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        viewStats = new ViewStats("ewm-main-service", "/events/1", 10L);
+        viewStats1 = new ViewStats("app1", "/events/1", 5L);
+        viewStats2 = new ViewStats("app2", "/events/2", 10L);
     }
 
     @Test
@@ -63,26 +65,98 @@ class StatsControllerTest {
     }
 
     @Test
-    void getStats_WhenValidParams_ShouldReturnStats() {
-        LocalDateTime start = LocalDateTime.now().minusDays(1);
-        LocalDateTime end = LocalDateTime.now().plusDays(1);
+    void getStats_WhenUrlEncodedDates_ShouldParseCorrectly() {
+        String start = "2023-01-01%2010:00:00";
+        String end = "2023-01-02%2010:00:00";
         List<String> uris = List.of("/events/1");
-        List<ViewStats> expectedStats = List.of(viewStats);
+        List<ViewStats> expectedStats = List.of(viewStats1);
 
-        when(statsService.getStats(start, end, uris, false)).thenReturn(expectedStats);
+        when(statsService.getStats(any(LocalDateTime.class), any(LocalDateTime.class), eq(uris), eq(false)))
+                .thenReturn(expectedStats);
 
         List<ViewStats> result = statsController.getStats(start, end, uris, false);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(viewStats.getApp(), result.getFirst().getApp());
-        verify(statsService, times(1)).getStats(start, end, uris, false);
+
+        verify(statsService).getStats(
+                eq(LocalDateTime.of(2023, 1, 1, 10, 0, 0)),
+                eq(LocalDateTime.of(2023, 1, 2, 10, 0, 0)),
+                eq(uris),
+                eq(false)
+        );
+    }
+
+    @Test
+    void getStats_WhenIsoDateFormat_ShouldParseCorrectly() {
+        String start = "2023-01-01T10:00:00";
+        String end = "2023-01-02T10:00:00";
+        List<ViewStats> expectedStats = List.of(viewStats1);
+
+        when(statsService.getStats(any(LocalDateTime.class), any(LocalDateTime.class), eq(null), eq(true)))
+                .thenReturn(expectedStats);
+
+        List<ViewStats> result = statsController.getStats(start, end, null, true);
+
+        assertNotNull(result);
+
+        verify(statsService).getStats(
+                eq(LocalDateTime.of(2023, 1, 1, 10, 0, 0)),
+                eq(LocalDateTime.of(2023, 1, 2, 10, 0, 0)),
+                eq(null),
+                eq(true)
+        );
     }
 
     @Test
     void getStats_WhenStartAfterEnd_ShouldThrowException() {
-        LocalDateTime start = LocalDateTime.now().plusDays(1);
-        LocalDateTime end = LocalDateTime.now().minusDays(1);
+        String start = "2023-01-02 10:00:00";
+        String end = "2023-01-01 10:00:00";
+
+        assertThrows(IllegalArgumentException.class,
+                () -> statsController.getStats(start, end, null, false));
+
+        verify(statsService, never()).getStats(any(), any(), any(), any());
+    }
+
+    @Test
+    void getStats_WhenMultipleStats_ShouldReturnSortedByHitsDesc() {
+        String start = "2023-01-01 10:00:00";
+        String end = "2023-01-02 10:00:00";
+
+        List<ViewStats> unsortedStats = Arrays.asList(viewStats1, viewStats2);
+
+        when(statsService.getStats(any(LocalDateTime.class), any(LocalDateTime.class), eq(null), eq(true)))
+                .thenReturn(unsortedStats);
+
+        List<ViewStats> result = statsController.getStats(start, end, null, true);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(10L, result.get(0).getHits());
+        assertEquals(5L, result.get(1).getHits());
+    }
+
+    @Test
+    void getStats_WhenSingleStat_ShouldNotSort() {
+        String start = "2023-01-01 10:00:00";
+        String end = "2023-01-02 10:00:00";
+        List<ViewStats> singleStat = List.of(viewStats1);
+
+        when(statsService.getStats(any(LocalDateTime.class), any(LocalDateTime.class), eq(null), eq(false)))
+                .thenReturn(singleStat);
+
+        List<ViewStats> result = statsController.getStats(start, end, null, false);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(viewStats1, result.get(0));
+    }
+
+    @Test
+    void getStats_WhenInvalidDateFormat_ShouldThrowException() {
+        String start = "invalid-date";
+        String end = "2023-01-02 10:00:00";
 
         assertThrows(IllegalArgumentException.class,
                 () -> statsController.getStats(start, end, null, false));
